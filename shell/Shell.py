@@ -27,10 +27,11 @@ class Shell(object):
         """
         return self.pid
 
-    def runCommand(self, command:str,shellOutputFile:str):
-        self.pid = os.getpid()  # get and remember pid
-        print("[-]======================================================[-]")
-        os.write(1, ("About to fork (pid=%d)\n" % self.pid).encode())
+
+    def runCommand(self,command:str):
+        self.pid = os.getpid()
+
+        os.write(1, ("About to fork (pid:%d)\n" % self.pid).encode())
 
         rc = os.fork()
 
@@ -41,20 +42,16 @@ class Shell(object):
         elif rc == 0:  # child
             os.write(1, ("Child: My pid==%d.  Parent's pid=%d\n" %
                          (os.getpid(), self.pid)).encode())
-            args = command.split(" ")  # TODO: Command Line :PARSER
-
-            os.close(1)  # redirect child's stdout
-            os.open(shellOutputFile, os.O_CREAT | os.O_WRONLY);
-            os.set_inheritable(1, True)
-
-            for dir in re.split(":", os.environ['PATH']):  # try each directory in path
+            args = command.split(" ")  # COMMAND
+            for dir in re.split(":", os.environ['PATH']):  # try each directory in the path
                 program = "%s/%s" % (dir, args[0])
+                #os.write(1, ("Child:  ...trying to exec %s\n" % program).encode())  PRINTS TO STDOUT
                 try:
                     os.execve(program, args, os.environ)  # try to exec program
                 except FileNotFoundError:  # ...expected
                     pass  # ...fail quietly
 
-            os.write(2, ("Child:    Error: Could not exec %s\n" % args[0]).encode())
+            os.write(2, ("%s: command does not exist\n" % args[0]).encode())
             sys.exit(1)  # terminate with error
 
         else:  # parent (forked ok)
@@ -63,5 +60,3 @@ class Shell(object):
             childPidCode = os.wait()
             os.write(1, ("Parent: Child %d terminated with exit code %d\n" %
                          childPidCode).encode())
-            print("------------------------------------------------------------")
-

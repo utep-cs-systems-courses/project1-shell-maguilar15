@@ -15,7 +15,7 @@ if rc < 0:
 elif rc == 0:                   # child
     os.write(1, ("Child: My pid==%d.  Parent's pid=%d\n" % 
                  (os.getpid(), pid)).encode())
-    args = ["wc","--lines","p3-exec.py"] # COMMAND
+    args = ["wc", "--lines", "p3-exec.c"]  # COMMAND
     for dir in re.split(":", os.environ['PATH']): # try each directory in the path
         program = "%s/%s" % (dir, args[0])
         os.write(1, ("Child:  ...trying to exec %s\n" % program).encode())

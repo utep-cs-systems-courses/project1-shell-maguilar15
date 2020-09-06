@@ -20,7 +20,7 @@ if __name__ == "__main__":
     while quitShell:
         shellPrompt = shell.makeShellPrompt(customShellPrompt)
         if shellPrompt != "exit":
-            shell.runCommand(shellPrompt, shellOutputFileName)
+            shell.runCommand(shellPrompt)
         else:
             quitShell = False
 
