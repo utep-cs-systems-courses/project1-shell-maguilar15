@@ -64,3 +64,19 @@ information. It's fine to print such information to "standard error" (fd #2).
 
 The demos directory contains several small programs that utilize the system calls and features necessary to implement your shell.
 
+# Assignment: UNIX Shell 
+
+## Run Shell 
+
+```bash 
+python main.py
+```
+
+### Environment Variables 
+* PS1 
+    * Shell Token for prompt. 
+* FILENAME
+    * Name of file that will contain command output. 
+
+## Shell Package 
+
