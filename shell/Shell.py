@@ -1,4 +1,6 @@
-# Author: Manuel Aguilar
+"""
+:author Manuel Aguilar
+"""
 
 import os, sys, re
 
@@ -13,10 +15,8 @@ class Shell(object):
 
     def makeShellPrompt(self,shellPromptToken:str):
         self.shellPrompt = shellPromptToken
-        if shellPromptToken is None:
-            shellPrompt = str(input("?> "))  # default
-        else:
-            shellPrompt = str(input(f"{shellPromptToken} "))
+
+        shellPrompt = str(input(f"({os.getcwd()}){shellPromptToken} "))
 
         return shellPrompt
 
@@ -60,14 +60,22 @@ def _findCommand(command:str):
     :param command: whatever is typed into the terminal.
     :return:
     """
-    args = command.split(" ")  # COMMAND
-    result = [dir for dir in re.split(":",os.environ["PATH"]) if os.path.exists(f"{dir}/{args[0]}")]
-    for e in result:
-        program = f"{e}/{args[0]}"
+    args = command.split(" ")  # TODO: COMMAND PARSER
 
-        os.write(1, "std::out> ".encode())
-        os.execve(program, args, os.environ)  # try to exec program
+    if "cd" not in args:
+
+        paths = [f"{dir}/{args[0]}" for dir in re.split(":",os.environ["PATH"])]
+        result = list(filter(lambda e: os.path.exists(e),paths))
+
+        for program in result:
+            os.write(1, "std::out> ".encode())
+            os.execve(program, args, os.environ)  # try to exec program
+        else:
+            os.write(1, "std::err> ".encode())
+            os.write(1,f"{args[0]}: Command does not exist\n".encode())
+
+    elif "|" in args:
+        print("[+] PIPE [+]")
+
     else:
-        os.write(1, "std::err> ".encode())
-        os.write(1,f"{args[0]}: Command does not exist\n".encode())
-
+        os.chdir(args[1])
