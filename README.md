@@ -75,8 +75,4 @@ python main.py
 ### Environment Variables 
 * PS1 
     * Shell Token for prompt. 
-* FILENAME
-    * Name of file that will contain command output. 
-
-## Shell Package 
 
