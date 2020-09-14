@@ -49,7 +49,7 @@ class Shell(object):
             os.write(1, "--------------------------------------------------\n".encode())
 
             # Control Standard In(0) and Standard Out(1)
-            args = command.split(" ")                    #TODO: Command Parser
+            args = command.replace("\n","").split()                    #TODO: Command Parser
 
             if "|" in args:
                 self._runPipeCommand(command)
@@ -58,6 +58,7 @@ class Shell(object):
                 self._findCommandAndExecute(args, background=True)
             elif ">" in args or ">>" in args:
                 filename = str(args[-1])                       # Filename for Redirection
+                args = args[:args.index(">")]
                 #os.write(1,f'Filename:  {args[3]}'.encode()) ## DEBUG
                 ######################################################
                 os.close(1)  # redirect child's stdout
@@ -65,11 +66,10 @@ class Shell(object):
                 os.set_inheritable(1, True)
                 ######################################################
                 #['cat', 'README.md', '>', 'file.txt']
-                args = args[:-2]
                 self._findCommandAndExecute(args,redirectStdOut=True)
             elif "<" in args:
                 filename = str(args[-1])
-                first = args[0:args.index("<")]
+                first = args[:args.index("<")]
                 ############################################
                 #os.close(0)
                 #new_stdin = os.open(f"{filename}",os.O_WRONLY|os.O_CREAT|os.O_TRUNC)
@@ -135,9 +135,13 @@ class Shell(object):
                 os.write(1,"File Path does not exist.\n".encode())
 
     def _runPipeCommand(self,command:str):
-        pipe = command.split("|")
-        pipe1 = pipe[0].strip().split()
-        pipe2 = pipe[1].strip().split()
+        pipe = command.replace("\n","").split("|")
+        pipe1 = pipe[0].replace("\n","").strip().split()
+        pipe2 = pipe[1].replace("\n","").strip().split()
+
+        backgroundFlag1 = "&" in pipe1 if True else False
+        backgroundFlag2 = "&" in pipe2 if True else False
+
         pr, pw = os.pipe()
         for fd in (pr, pw):
             os.set_inheritable(fd, True)
@@ -153,11 +157,17 @@ class Shell(object):
             os.set_inheritable(1,True)
             for fd in (pr,pw):
                 os.close(fd)
-            self._findCommandAndExecute(pipe1)
+            if ">" not in pipe1:
+                self._findCommandAndExecute(pipe1,background=backgroundFlag1)
+            else:
+                self._findCommandAndExecute(pipe1,redirectStdOut=True,background=backgroundFlag1)
         else:
             os.close(0)
             os.dup(pr)
             os.set_inheritable(0,True)
             for fd in (pw,pr):
                 os.close(fd)
-            self._findCommandAndExecute(pipe2)
+            if ">" not in pipe2:
+                self._findCommandAndExecute(pipe2,background=backgroundFlag2)
+            else:
+                self._findCommandAndExecute(pipe2,redirectStdOut=True,background=backgroundFlag2)
