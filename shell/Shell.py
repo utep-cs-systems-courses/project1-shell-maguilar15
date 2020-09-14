@@ -39,22 +39,24 @@ class Shell(object):
         os.write(1,"[+]--------------------------------------------[+]\n".encode())
         os.write(1, f"About to fork (pid:{self.pid})\n".encode())
 
-        rc = os.fork()
+        fork = os.fork()
 
-        if rc < 0:
-            os.write(2, f"fork failed, returning {rc}\n".encode())
+        if fork < 0:
+            os.write(2, f"fork failed, returning {fork}\n".encode())
             sys.exit(1)
-        elif rc == 0:  # child
+        elif fork == 0:  # child
             os.write(1, f"Child: My pid=={os.getpid()}.  Parent's pid={self.pid}\n".encode())
             os.write(1, "--------------------------------------------------\n".encode())
 
-            # Control Standard In(1) and Standard Out(2)
+            # Control Standard In(0) and Standard Out(1)
             args = command.split(" ")                    #TODO: Command Parser
 
-            if "&" in args:
+            if "|" in args:
+                self._runPipeCommand(command)
+            elif "&" in args:
                 args = args[:args.index("&")]
                 self._findCommandAndExecute(args, background=True)
-            elif ">" in args:
+            elif ">" in args or ">>" in args:
                 filename = str(args[-1])                       # Filename for Redirection
                 #os.write(1,f'Filename:  {args[3]}'.encode()) ## DEBUG
                 ######################################################
@@ -63,7 +65,6 @@ class Shell(object):
                 os.set_inheritable(1, True)
                 ######################################################
                 #['cat', 'README.md', '>', 'file.txt']
-
                 args = args[:-2]
                 self._findCommandAndExecute(args,redirectStdOut=True)
             elif "<" in args:
@@ -81,21 +82,13 @@ class Shell(object):
                 os.set_inheritable(stdin_fd, True)
                 ###########################################
                 self._findCommandAndExecute(first)
-            elif ">>" in args:
-                filename = args[-1]
-                if not os.path.exists(filename):
-                    os.write(1,f"{filename}: the file does not exist".encode())
-
-                os.write(1,f'Command: {args[2]} {args[-1]}'.encode()) # Redirection
             elif "2>" in args:
                 os.write(2,f"ERROR".encode())
-            elif "|" in args:
-                pipeCommand = command.split("|")
             else:
                 self._findCommandAndExecute(args)
 
         else:  # parent (forked ok)
-            os.write(1, f"Parent: My pid={self.pid}.  Child's pid={rc}\n".encode())
+            os.write(1, f"Parent: My pid={self.pid}.  Child's pid={fork}\n".encode())
             # Logic Bomb ? (Check: continue)
             if not background:
                 childPidCode = os.wait()
@@ -120,7 +113,7 @@ class Shell(object):
             for program in result:
                 if background:
                     bg = os.spawnve(os.P_WAIT, program, args, os.environ)
-                    os.write(2,f"Background process {bg}".encode())
+                    os.write(2,f"Background process exit code: {bg}\n".encode())
                 if redirectStdOut:
                     # No standard out banner when appending
                     os.execve(program,args,os.environ)
@@ -136,4 +129,35 @@ class Shell(object):
                 os.write(1, "std::err> ".encode())    # change to standard out
                 os.write(1,f"{args[0]}: Command does not exist\n".encode())
         else:
-            os.chdir(args[1])
+            try:
+                os.chdir(args[1])
+            except FileNotFoundError:
+                os.write(1,"File Path does not exist.\n".encode())
+
+    def _runPipeCommand(self,command:str):
+        pipe = command.split("|")
+        pipe1 = pipe[0].strip().split()
+        pipe2 = pipe[1].strip().split()
+        pr, pw = os.pipe()
+        for fd in (pr, pw):
+            os.set_inheritable(fd, True)
+
+        forkCode = os.fork()
+
+        if forkCode < 0:
+            os.write(2,"[-] Fork Failed\n".encode())
+            sys.exit(1)
+        if forkCode == 0:
+            os.close(1)
+            os.dup(pw)
+            os.set_inheritable(1,True)
+            for fd in (pr,pw):
+                os.close(fd)
+            self._findCommandAndExecute(pipe1)
+        else:
+            os.close(0)
+            os.dup(pr)
+            os.set_inheritable(0,True)
+            for fd in (pw,pr):
+                os.close(fd)
+            self._findCommandAndExecute(pipe2)
