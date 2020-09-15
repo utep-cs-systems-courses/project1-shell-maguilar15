@@ -9,7 +9,7 @@ if __name__ == "__main__":
     ps1 = os.getenv("PS1")
     customShellPrompt = ps1 if ps1 else "?> " # default shell prompt token
 
-    # Initialize Shell Object
+    # Initialize Shell
     shell = Shell(customShellPrompt)
 
     while True:
