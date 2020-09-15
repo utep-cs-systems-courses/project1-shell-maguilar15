@@ -1,0 +1,99 @@
+import os, sys, re
+
+class Exec(object):
+
+    def __init__(self):
+        pass
+
+    def _runCommand(self,args:list, redirectStdOut:bool=False,redirectErrOut:bool=False,background:bool=False):
+        """
+        Command that will be checked against every directory in $PATH variable.
+        :param args: whatever is typed into the terminal.
+        :param redirectStdOut: redirect flag that indicates redirection.
+        :param redirectErrOut: redirect to error.
+        :param background: background processes of command.
+        :return:
+        """
+        paths = [f"{dir}/{args[0]}" for dir in re.split(":", os.environ["PATH"])]
+        result = list(filter(lambda p: os.path.exists(p), paths))
+
+        if "cd" not in args:
+            # Execute program
+            for program in result:
+                if background:
+                    bg = os.spawnve(os.P_WAIT, program, args, os.environ)
+                    os.write(2,f"[*] Background process exit code: {bg}, program={program}, args={args} [*]\n".encode())
+
+                if redirectStdOut:
+                    # No standard out banner when appending
+                    os.execve(program,args,os.environ)
+                else:
+                    # Standard out with banner
+                    os.write(1, "std::out> \n".encode())
+                    os.execve(program, args, os.environ)  # execute program
+            else:
+                # Standard Error
+                if redirectErrOut:
+                    os.write(2,f"{args[0]}: Command does not exist\n".encode())
+
+                os.write(1, "std::err> \n".encode())    # change to standard out
+                os.write(1,f"{args[0]}: Command does not exist\n".encode())
+        else:
+            try:
+                os.chdir(args[1])
+            except FileNotFoundError:
+                os.write(1,"cd: directory does not exist.\n".encode())
+
+    def findCommandAndExecute(self,
+                               args: list,
+                               redirectStdOut: bool = False,
+                               redirectErrOut: bool = False,
+                               background: bool = False):
+        try:
+            self._runCommand(args=args,
+                         redirectStdOut=redirectStdOut,
+                         redirectErrOut=redirectErrOut,
+                         background=background)
+        except IndexError:
+            os.write(2,f"Jobs Running in the background: {args}\n".encode())
+
+    def runPipeCommand(self,command:str):
+        """
+        Execute Pipe command.
+        :param command: command string.
+        :return:
+        """
+        pipe = command.replace("\n","").split("|")
+        pipe1 = pipe[0].replace("\n","").strip().split()
+        pipe2 = pipe[1].replace("\n","").strip().split()
+
+        backgroundFlag1 = "&" in pipe1 if True else False
+        backgroundFlag2 = "&" in pipe2 if True else False
+
+        pr, pw = os.pipe()
+        for fd in (pr, pw):
+            os.set_inheritable(fd, True)
+
+        forkCode = os.fork()
+
+        if forkCode < 0:
+            os.write(2,"[-] Fork Failed\n".encode())
+            sys.exit(1)
+        if forkCode == 0:
+            os.close(1)
+            os.dup(pw)
+            os.set_inheritable(1,True)
+            for fd in (pr,pw):
+                os.close(fd)
+                # redirectStdOut: true because we want no print banner repeating.
+                self._runCommand(pipe1,redirectStdOut=True,background=backgroundFlag1)
+        else:
+            os.close(0)
+            os.dup(pr)
+            os.set_inheritable(0,True)
+            for fd in (pw,pr):
+                os.close(fd)
+            if ">" not in pipe2:
+                self._runCommand(pipe2,background=backgroundFlag2)
+            else:
+                self._runCommand(pipe2,redirectStdOut=True,background=backgroundFlag2)

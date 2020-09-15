@@ -75,3 +75,13 @@ python main.py
 ### Environment Variables 
 * PS1 
     * Shell Token for prompt. 
+
+### Shell Usage 
+
+**?>** ls -hlrt
+
+**?>** ls -hlrt > file.txt 
+
+**?>** sort -r < file.txt 
+
+**?>** cat file.txt | sort -r 
