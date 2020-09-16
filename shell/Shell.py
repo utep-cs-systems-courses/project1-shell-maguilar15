@@ -26,7 +26,10 @@ class Shell(object):
             print("Exit Shell, bye")
             exit()
 
-        self.executedCommandToStandardOutput(shellPrompt)
+        if not shellPrompt:
+            pass
+        else:
+            self.executedCommandToStandardOutput(shellPrompt)
 
         return shellPrompt
 
@@ -53,28 +56,28 @@ class Shell(object):
             os.write(1, "--------------------------------------------------\n".encode())
 
             # Control Standard In(0) and Standard Out(1)
-            args = command.replace("&","").replace("\n","").split()     #TODO: Command Parser
+            args = command.replace("&","").replace("\n","").split()
 
             if "|" in args:
                 self.cmd.runPipeCommand(command)
             elif ">" in args or ">>" in args:
                 filename = str(args[-1])                       # Filename for Redirection
                 args = args[:args.index(">")]
-                ######################################################
+                # Standard Out
                 os.close(1)  # redirect child's stdout
                 os.open(filename, os.O_CREAT | os.O_WRONLY | os.O_TRUNC)
                 os.set_inheritable(1, True)
-                ######################################################
+
                 self.cmd.findCommandAndExecute(args,redirectStdOut=True,background=backgroundFlag)
             elif "<" in args:
                 filename = str(args[-1])
                 args = args[:args.index("<")]
-                #######################################
+                # Standard In
                 os.close(0)
                 sys.stdin = open(f"{filename}", "r")
                 stdin_fd = sys.stdin.fileno()
                 os.set_inheritable(stdin_fd, True)
-                #######################################
+
                 self.cmd.findCommandAndExecute(args,background=backgroundFlag)
             elif "2>" in args:
                 self.cmd.findCommandAndExecute(args[:args.index("2>")],redirectErrOut=True,background=backgroundFlag)
@@ -83,6 +86,8 @@ class Shell(object):
 
         else:  # parent (forked ok)
             os.write(1, f"Parent: My pid={self.pid}.  Child's pid={fork}\n".encode())
+            if backgroundFlag:
+                pass
 
             childPidCode = os.wait()
 

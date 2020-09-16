@@ -85,6 +85,23 @@ class Exec(object):
             os.set_inheritable(1,True)
             for fd in (pr,pw):
                 os.close(fd)
+                if ">" in pipe1:
+                    filename = str(pipe1[-1])  # Filename for Redirection
+                    pipe1 = pipe1[:pipe1.index(">")]
+                    # Redirect to Standard Out
+                    os.close(1)  # redirect child's stdout
+                    os.open(filename, os.O_CREAT | os.O_WRONLY | os.O_TRUNC)
+                    os.set_inheritable(1, True)
+
+                elif "<" in pipe1:
+                    filename = str(pipe1[-1])
+                    pipe1 = pipe1[:pipe1.index("<")]
+                    # Redirect to Standard In
+                    os.close(0)
+                    sys.stdin = open(f"{filename}", "r")
+                    stdin_fd = sys.stdin.fileno()
+                    os.set_inheritable(stdin_fd, True)
+
                 # redirectStdOut: true because we want no print banner repeating.
                 self._runCommand(pipe1,redirectStdOut=True,background=backgroundFlag1)
         else:
@@ -93,7 +110,22 @@ class Exec(object):
             os.set_inheritable(0,True)
             for fd in (pw,pr):
                 os.close(fd)
-            if ">" not in pipe2:
-                self._runCommand(pipe2,background=backgroundFlag2)
-            else:
+            if ">" in pipe2:
+                filename = str(pipe2[-1])  # Filename for Redirection
+                pipe2 = pipe2[:pipe2.index(">")]
+                # Redirect to Standard Out
+                os.close(1)
+                os.open(filename, os.O_CREAT | os.O_WRONLY | os.O_TRUNC)
+                os.set_inheritable(1, True)
+
                 self._runCommand(pipe2,redirectStdOut=True,background=backgroundFlag2)
+            elif "<" in pipe2:
+                filename = str(pipe2[-1])
+                pipe2 = pipe2[:pipe2.index("<")]
+                # Redirect to Standard In
+                os.close(0)
+                sys.stdin = open(f"{filename}", "r")
+                stdin_fd = sys.stdin.fileno()
+                os.set_inheritable(stdin_fd, True)
+
+            self._runCommand(pipe2,redirectStdOut=False,background=backgroundFlag2)

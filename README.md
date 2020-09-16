@@ -76,12 +76,19 @@ python main.py
 * PS1 
     * Shell Token for prompt. 
 
+
 ### Shell Usage 
 
 **?>** ls -hlrt
+
+**?>** ls -hlrt &
 
 **?>** ls -hlrt > file.txt 
 
 **?>** sort -r < file.txt 
 
 **?>** cat file.txt | sort -r 
+
+**?>** cat < file.txt | sort
+
+**?>** cat file.txt | sort -r > result.txt
