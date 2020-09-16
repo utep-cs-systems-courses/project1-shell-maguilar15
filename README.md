@@ -66,6 +66,12 @@ The demos directory contains several small programs that utilize the system call
 
 # Assignment: UNIX Shell 
 
+### Recreate Environment 
+
+```bash 
+pip install -r requirements.txt
+```
+
 ## Run Shell 
 
 ```bash 
