@@ -5,7 +5,7 @@ if [ -z $1 ] ; then
 fi
 myShell=$1
 
-export PS1=""			# supress prompt
+#export PS1=""			# supress prompt
 
 _uname=$(which uname)
 _cat=$(which cat)

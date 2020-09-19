@@ -81,6 +81,10 @@ python main.py
 ### Environment Variables 
 * PS1 
     * Shell Token for prompt. 
+    * ```bash  export PS1="~$ " ```
+* COLOR 
+    * Give the shell a colored prompt.
+    * ```bash export COLOR=1 ```
 
 
 ### Shell Usage 

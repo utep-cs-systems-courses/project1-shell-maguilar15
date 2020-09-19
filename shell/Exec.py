@@ -5,7 +5,7 @@ class Exec(object):
     def __init__(self):
         pass
 
-    def _runCommand(self,args:list, redirectStdOut:bool=False,redirectErrOut:bool=False,background:bool=False):
+    def _runCommand(self,args:list,redirectStdOut:bool=False,redirectErrOut:bool=False,background:bool=False):
         """
         Command that will be checked against every directory in $PATH variable.
         :param args: whatever is typed into the terminal.
@@ -21,10 +21,11 @@ class Exec(object):
             # Execute program
             for program in result:
                 if background:
+                    os.write(1,"[&]---------------------------------------------------------------Background Job----[&]\n".encode())
                     bg = os.spawnve(os.P_WAIT, program, args, os.environ)
-                    os.write(2,f"[*] Background process exit code: {bg}, program={program}, args={args} [*]\n".encode())
+                    os.write(1,f"[&]-------------Background process exit code: {bg}, program={program}, args={args}---[&]\n".encode())
 
-                if redirectStdOut:
+                if redirectStdOut or redirectErrOut:
                     # No standard out banner when appending
                     os.execve(program,args,os.environ)
                 else:
@@ -42,20 +43,29 @@ class Exec(object):
             try:
                 os.chdir(args[1])
             except FileNotFoundError:
-                os.write(1,"cd: directory does not exist.\n".encode())
+                os.write(1,"cd: Directory does not exist\n".encode())
 
     def findCommandAndExecute(self,
-                               args: list,
-                               redirectStdOut: bool = False,
-                               redirectErrOut: bool = False,
-                               background: bool = False):
+                              args: list,
+                              redirectStdOut: bool = False,
+                              redirectErrOut: bool = False,
+                              background: bool = False):
+        """
+        Command that will be checked against every directory in $PATH variable.
+        :param args: whatever is typed into the terminal.
+        :param redirectStdOut: redirect flag that indicates redirection.
+        :param redirectErrOut: redirect to error.
+        :param background: background processes of command.
+        :return:
+        """
         try:
             self._runCommand(args=args,
-                         redirectStdOut=redirectStdOut,
-                         redirectErrOut=redirectErrOut,
-                         background=background)
+                             redirectStdOut=redirectStdOut,
+                             redirectErrOut=redirectErrOut,
+                             background=background)
         except IndexError:
-            os.write(2,f"Jobs Running in the background: {args}\n".encode())
+            os.write(1, f"[*] Provide valid command (Empty String)\n".encode())
+
 
     def runPipeCommand(self,command:str):
         """
