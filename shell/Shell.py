@@ -24,13 +24,14 @@ class Shell(object):
         :return: shellPrompt
         """
         if self.shellColor:
-            coloredShell = Color.F_LightMagenta + f"({os.getcwd()}){self.shellPromptToken} " + Color.F_LightYellow
-            shellPrompt = str(input(coloredShell))
+            shellBanner = Color.F_LightMagenta + f"({os.getcwd()}){self.shellPromptToken} " + Color.F_LightYellow
         else:
-            normalShell = f"({os.getcwd()}){self.shellPromptToken} "
-            shellPrompt = str(input(normalShell))
-        return shellPrompt
+            shellBanner = f"({os.getcwd()}){self.shellPromptToken} "
 
+        os.write(1, shellBanner.encode())
+        shellPrompt = os.read(0,128).decode()
+
+        return shellPrompt
 
 
     def run(self):
@@ -38,7 +39,6 @@ class Shell(object):
         Run-time engine for terminal.
         :return: shellPrompt for command.
         """
-
         shellPrompt = self._makeShell()
 
         if shellPrompt == "exit":
