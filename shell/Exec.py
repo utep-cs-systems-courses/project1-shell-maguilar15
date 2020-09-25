@@ -20,10 +20,10 @@ class Exec(object):
         if "cd" not in args:
             # Execute program
             for program in result:
-                if background:
-                    os.write(1,"[&]---------------------------------------------------------------Background Job----[&]\n".encode())
-                    bg = os.spawnve(os.P_NOWAIT, program, args, os.environ)
-                    os.write(1,f"[&]-------------Background process exit code: {bg}, program={program}, args={args}---[&]\n".encode())
+                #if background:
+                    #os.write(1,"[&]---------------------------------------------------------------Background Job----[&]\n".encode())
+                    #bg = os.spawnve(os.P_NOWAIT, program, args, os.environ)
+                    #os.write(1,f"[&]-------------Background process exit code: {bg}, program={program}, args={args}---[&]\n".encode())
 
                 if redirectStdOut or redirectErrOut:
                     # No standard out banner when appending
@@ -37,7 +37,7 @@ class Exec(object):
                 if redirectErrOut:
                     os.write(2,f"{args[0]}: Command does not exist\n".encode())
 
-                os.write(1, "std::err> \n".encode())    # change to standard out
+                #os.write(1, "std::err> \n".encode())    # change to standard out
                 os.write(1,f"{args[0]}: Command does not exist\n".encode())
         else:
             try:
@@ -64,7 +64,8 @@ class Exec(object):
                              redirectErrOut=redirectErrOut,
                              background=background)
         except IndexError:
-            os.write(1, f"[*] Provide valid command (Empty String)\n".encode())
+            #os.write(1, f"[*] Provide valid command (Empty String)\n".encode())
+            pass
 
 
     def runPipeCommand(self,command:str):
@@ -108,9 +109,8 @@ class Exec(object):
                     pipe1 = pipe1[:pipe1.index("<")]
                     # Redirect to Standard In
                     os.close(0)
-                    sys.stdin = open(f"{filename}", "r")
-                    stdin_fd = sys.stdin.fileno()
-                    os.set_inheritable(stdin_fd, True)
+                    os.open(filename,os.O_RDONLY)
+                    os.set_inheritable(0, True)
 
                 # redirectStdOut: true because we want no print banner repeating.
                 self._runCommand(pipe1,redirectStdOut=True,background=backgroundFlag1)
