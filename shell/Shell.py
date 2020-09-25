@@ -1,5 +1,3 @@
-#! /usr/bin/env python3
-
 """
 :author Manuel Aguilar
 :lab 1
@@ -30,9 +28,9 @@ class Shell(object):
         else:
             shellBanner = f"({os.getcwd()}){self.shellPromptToken} "
 
-        os.write(1, shellBanner.encode())
-        shellPrompt = os.read(0,128).decode()
-
+        #os.write(1, shellBanner.encode())
+        #shellPrompt = os.read(0,128).decode()
+        shellPrompt = input(shellBanner)
         return shellPrompt
 
 
@@ -63,19 +61,19 @@ class Shell(object):
         """
         # Background Flag
         backgroundFlag = "&" in command if True else False
-        pid = self.pid
+        #pid = self.pid
 
-        os.write(1, "[+]--------------------------------------------[+]\n".encode())
-        os.write(1, f"About to fork (pid:{pid})\n".encode())
+        #os.write(1, "[+]--------------------------------------------[+]\n".encode())
+        #os.write(1, f"About to fork (pid:{pid})\n".encode())
 
         fork = os.fork()
 
         if fork < 0:
-            os.write(2, f"fork failed, returning {fork}\n".encode())
+            #os.write(2, f"fork failed, returning {fork}\n".encode())
             sys.exit(1)
         elif fork == 0:  # child
-            os.write(1, f"Child: My pid=={os.getpid()}.  Parent's pid={pid}\n".encode())
-            os.write(1, "--------------------------------------------------\n".encode())
+            #os.write(1, f"Child: My pid=={os.getpid()}.  Parent's pid={pid}\n".encode())
+            #os.write(1, "--------------------------------------------------\n".encode())
 
             # Control Standard In(0) and Standard Out(1)
             args = command.replace("&", "").replace("\n", "").split()
@@ -86,7 +84,7 @@ class Shell(object):
                 filename = str(args[-1])  # Filename for Redirection
                 args = args[:args.index(">")]
                 # Standard Out
-                os.close(1)  # redirect child's stdout
+                os.close(1)
                 os.open(filename, os.O_CREAT | os.O_WRONLY | os.O_TRUNC)
                 os.set_inheritable(1, True)
 
@@ -115,13 +113,11 @@ class Shell(object):
                 self.cmd.findCommandAndExecute(args=args, background=backgroundFlag)
 
         else:  # parent (forked ok)
-            os.write(1, f"Parent: My pid={pid}.  Child's pid={fork}\n".encode())
+            #os.write(1, f"Parent: My pid={pid}.  Child's pid={fork}\n".encode())
 
             # Background
-            if backgroundFlag:
-                pass
+            if not backgroundFlag:
+                childPidCode = os.wait()
 
-            childPidCode = os.wait()
-
-            os.write(1, "--------------------------------------------------\n".encode())
-            os.write(1, f"Parent: Child {childPidCode[0]} terminated with exit code {childPidCode[1]}\n".encode())
+            #os.write(1, "--------------------------------------------------\n".encode())
+            #os.write(1, f"Parent: Child {childPidCode[0]} terminated with exit code {childPidCode[1]}\n".encode())

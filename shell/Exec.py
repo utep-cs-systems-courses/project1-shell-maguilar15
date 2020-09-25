@@ -1,5 +1,3 @@
-#! /usr/bin/env python3
-
 import os, sys, re
 
 class Exec(object):
@@ -24,7 +22,7 @@ class Exec(object):
             for program in result:
                 if background:
                     os.write(1,"[&]---------------------------------------------------------------Background Job----[&]\n".encode())
-                    bg = os.spawnve(os.P_WAIT, program, args, os.environ)
+                    bg = os.spawnve(os.P_NOWAIT, program, args, os.environ)
                     os.write(1,f"[&]-------------Background process exit code: {bg}, program={program}, args={args}---[&]\n".encode())
 
                 if redirectStdOut or redirectErrOut:
@@ -32,7 +30,7 @@ class Exec(object):
                     os.execve(program,args,os.environ)
                 else:
                     # Standard out with banner
-                    os.write(1, "std::out> \n".encode())
+                    #os.write(1, "std::out> \n".encode())
                     os.execve(program, args, os.environ)  # execute program
             else:
                 # Standard Error
