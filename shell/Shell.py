@@ -1,3 +1,5 @@
+#! /usr/bin/env python3
+
 """
 :author Manuel Aguilar
 :lab 1
