@@ -61,19 +61,12 @@ class Shell(object):
         """
         # Background Flag
         backgroundFlag = "&" in command if True else False
-        #pid = self.pid
-
-        #os.write(1, "[+]--------------------------------------------[+]\n".encode())
-        #os.write(1, f"About to fork (pid:{pid})\n".encode())
 
         fork = os.fork()
 
         if fork < 0:
-            #os.write(2, f"fork failed, returning {fork}\n".encode())
             sys.exit(1)
         elif fork == 0:  # child
-            #os.write(1, f"Child: My pid=={os.getpid()}.  Parent's pid={pid}\n".encode())
-            #os.write(1, "--------------------------------------------------\n".encode())
 
             # Control Standard In(0) and Standard Out(1)
             args = command.replace("&", "").replace("\n", "").split()
@@ -94,9 +87,8 @@ class Shell(object):
                 args = args[:args.index("<")]
                 # Standard In
                 os.close(0)
-                sys.stdin = open(f"{filename}", "r")
-                stdin_fd = sys.stdin.fileno()
-                os.set_inheritable(stdin_fd, True)
+                os.open(filename,os.O_RDONLY)
+                os.set_inheritable(0,True)
 
                 self.cmd.findCommandAndExecute(args=args, background=backgroundFlag)
             elif "2>" in args:
@@ -113,11 +105,7 @@ class Shell(object):
                 self.cmd.findCommandAndExecute(args=args, background=backgroundFlag)
 
         else:  # parent (forked ok)
-            #os.write(1, f"Parent: My pid={pid}.  Child's pid={fork}\n".encode())
 
             # Background
             if not backgroundFlag:
                 childPidCode = os.wait()
-
-            #os.write(1, "--------------------------------------------------\n".encode())
-            #os.write(1, f"Parent: Child {childPidCode[0]} terminated with exit code {childPidCode[1]}\n".encode())

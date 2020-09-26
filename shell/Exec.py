@@ -20,24 +20,16 @@ class Exec(object):
         if "cd" not in args:
             # Execute program
             for program in result:
-                #if background:
-                    #os.write(1,"[&]---------------------------------------------------------------Background Job----[&]\n".encode())
-                    #bg = os.spawnve(os.P_NOWAIT, program, args, os.environ)
-                    #os.write(1,f"[&]-------------Background process exit code: {bg}, program={program}, args={args}---[&]\n".encode())
-
                 if redirectStdOut or redirectErrOut:
                     # No standard out banner when appending
                     os.execve(program,args,os.environ)
                 else:
                     # Standard out with banner
-                    #os.write(1, "std::out> \n".encode())
                     os.execve(program, args, os.environ)  # execute program
             else:
                 # Standard Error
                 if redirectErrOut:
                     os.write(2,f"{args[0]}: Command does not exist\n".encode())
-
-                #os.write(1, "std::err> \n".encode())    # change to standard out
                 os.write(1,f"{args[0]}: Command does not exist\n".encode())
         else:
             try:
@@ -64,7 +56,6 @@ class Exec(object):
                              redirectErrOut=redirectErrOut,
                              background=background)
         except IndexError:
-            #os.write(1, f"[*] Provide valid command (Empty String)\n".encode())
             pass
 
 
@@ -134,8 +125,7 @@ class Exec(object):
                 pipe2 = pipe2[:pipe2.index("<")]
                 # Redirect to Standard In
                 os.close(0)
-                sys.stdin = open(f"{filename}", "r")
-                stdin_fd = sys.stdin.fileno()
-                os.set_inheritable(stdin_fd, True)
+                os.open(filename, os.O_RDONLY)
+                os.set_inheritable(0,True)
 
             self._runCommand(pipe2,redirectStdOut=False,background=backgroundFlag2)
