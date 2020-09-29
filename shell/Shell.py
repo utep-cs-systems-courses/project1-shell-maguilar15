@@ -29,7 +29,7 @@ class Shell(object):
             shellBanner = f"({os.getcwd()}){self.shellPromptToken} "
 
         #os.write(1, shellBanner.encode())
-        #shellPrompt = os.read(0,128).decode()
+        #shellPrompt = os.read(0,128)
         shellPrompt = input(shellBanner)
         return shellPrompt
 
@@ -41,14 +41,16 @@ class Shell(object):
         """
         shellPrompt = self._makeShell()
 
-        if shellPrompt == "exit":
-            print("Exit Shell, bye")
-            exit()
+        for cmd in shellPrompt.split(";"):
 
-        if not shellPrompt:
-            pass
-        else:
-            self.executedCommandToStandardOutput(shellPrompt)
+            if cmd == "exit":
+                print("Exit Shell, bye")
+                exit()
+
+            if not cmd:
+                pass
+            else:
+                self.executedCommandToStandardOutput(cmd)
 
         return shellPrompt
 
